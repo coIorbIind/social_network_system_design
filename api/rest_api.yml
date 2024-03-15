@@ -1,0 +1,625 @@
+openapi: 3.0.0
+
+
+tags:
+  - name: Posts
+  - name: Photos 
+  - name: Reactions
+  - name: Chat
+
+info:
+  title: TravelersSocialNetwork API
+  description:
+    API социальной сети для путешественников
+  version: 1.0.0
+
+paths:
+  /posts:
+    post:
+      summary: Создание поста
+      description: Публикация постов из путешествий с фотографиями, небольшим описанием и привязкой к конкретному месту путешествия
+      tags:
+        - Posts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BasePostSchema"
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseSchema"
+        400:
+          description: Bad Request
+        500:
+          description: Server error
+  
+  /posts/rating:
+    get:
+      summary: Топ постов
+      description: Поиск популярных мест для путешествий и просмотр постов с этих мест в виде ТОПа мест по странам и городам
+      tags:
+        - Posts
+      parameters:
+        - name: country
+          in: query
+          description: Страна для поиска 
+          required: false
+          schema:
+            type: string
+        - name: city
+          in: query
+          description: Город для поиска 
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Количество постов в топе
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 10
+        - name: offset
+          in: query
+          description: Оффсет
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PostResponseSchema"
+                  pagination:
+                    type: object
+                    properties:
+                      limit:
+                        type: integer
+                        minimum: 1
+                        default: 10
+                      offset:
+                        type: integer
+                        minimum: 0
+                        default: 0
+                      has_next:
+                        type: boolean
+              example:
+                data:
+                  - id: "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                    name: Поездка в Москву
+                    description: На прошлой неделе я посетил столицу нашей Родины - город Москву
+                    coords: [55.755864, 37.617698]
+                    photos: ["a8098c1a-f86e-11da-bd1a-00112444be1e"]
+                    author: {"surname": Петров, "name": Пётр}
+                  - id: "ade570ff-0512-4dfb-96b4-fbe5ce3a2c13"
+                    name: Поездка в Санкт-Петербург
+                    description: Вчера я приехал в прекрасный город Санкт-Петербург
+                    coords: [59.938784, 30.314997]
+                    photos: ["2724747b-ab7f-4cb6-9c10-f5f344adfd21"]
+                    author: {"surname": Иванов, "name": Иван}
+                pagination:
+                  limit: 2
+                  offset: 0
+                  has_next: true
+        400:
+          description: Bad Request
+        404:
+          description: Not found
+        500:
+          description: Server error
+          
+  /posts/{author_id}:
+    get:
+      summary: Просмотр пользовательских постов
+      description: Просмотр ленты других путешественников
+      tags:
+        - Posts
+      parameters:
+        - name: author_id
+          in: path
+          required: true
+          description: id автора постов
+          schema:
+            type : string
+        - name: limit
+          in: query
+          description: Количество постов в топе
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 10
+        - name: offset
+          in: query
+          description: Оффсет
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PostResponseSchema"
+                  pagination:
+                    type: object
+                    properties:
+                      limit:
+                        type: integer
+                        minimum: 1
+                        default: 10
+                      offset:
+                        type: integer
+                        minimum: 0
+                        default: 0
+                      has_next:
+                        type: boolean
+              example:
+                data:
+                  - id: "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                    name: Поездка в Москву
+                    description: На прошлой неделе я посетил столицу нашей Родины - город Москву
+                    coords: [55.755864, 37.617698]
+                    photos: ["a8098c1a-f86e-11da-bd1a-00112444be1e"]
+                    author: {"surname": Иванов, "name": Иван}
+                  - id: "ade570ff-0512-4dfb-96b4-fbe5ce3a2c13"
+                    name: Поездка в Санкт-Петербург
+                    description: Вчера я приехал в прекрасный город Санкт-Петербург
+                    coords: [59.938784, 30.314997]
+                    photos: ["2724747b-ab7f-4cb6-9c10-f5f344adfd21"]
+                    author: {"surname": Иванов, "name": Иван}
+                pagination:
+                  limit: 2
+                  offset: 0
+                  has_next: true
+        404:
+          description: Not found
+        500:
+          description: Server error
+
+  /photos:
+    post:
+      summary: Загрузка фотографии
+      description: Загрузка фотографии на сервер
+      tags:
+        - Photos
+      requestBody:
+        required: true
+        content:
+          image/jpeg:
+            schema: 
+              type: string
+              format: binary
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhotoResponse"
+        400:
+          description: Bad Request
+        500:
+          description: Server error
+          
+  /reactions/like:
+    post:
+      summary: Оценка поста
+      description: Оценка поста другого путешественника
+      tags:
+        - Reactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                post_id:
+                  type: string
+                  format: uuid
+                  description: id поста, которому хотим поставить like
+              required:
+                - post_id
+      responses:
+        204:
+          description: Ok
+        400:
+          description: Bad Request
+        404:
+          description: Not found
+        500:
+          description: Server error
+  
+  /reactions/comment:
+    post:
+      summary: Комментарий к посту
+      description: Оставить комментарий к посту другого путешественника
+      tags:
+        - Reactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                post_id:
+                  type: string
+                  format: uuid
+                  description: id поста, которому хотим поставить комментарий
+                comment:
+                  type: string
+                  description: Тело комментария
+                  example: Спасибо за Ваш интересный рассказ
+              required:
+                - post_id 
+      responses:
+        204:
+          description: Ok
+        400:
+          description: Bad Request
+        404:
+          description: Not found
+        500:
+          description: Server error
+          
+  /reactions/subscribe:
+    post:
+      summary: Подписка
+      description: Подписка на других путешественников, чтобы следить за их активностью
+      tags:
+        - Reactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                  format: uuid
+                  description: id пользователя, на которого хотим подписаться
+              required:
+                - user_id 
+      responses:
+        204:
+          description: Ok
+        400:
+          description: Bad Request
+        404:
+          description: Not found
+        500:
+          description: Server error
+          
+  /chat/{chat_id}:
+    get:
+      summary: Просмотр чата
+      description: Просмотр сообщений в чате
+      tags:
+        - Chat
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          description: id чата
+          schema:
+            type : string
+        - name: limit
+          in: query
+          description: Количество постов в топе
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 10
+        - name: offset
+          in: query
+          description: Оффсет
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PostResponseSchema"
+                  pagination:
+                    type: object
+                    properties:
+                      limit:
+                        type: integer
+                        minimum: 1
+                        default: 10
+                      offset:
+                        type: integer
+                        minimum: 0
+                        default: 0
+                      has_next:
+                        type: boolean
+              example:
+                data:
+                  - id: "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                    body: Привет!
+                    author: {"surname": Иванов, "name": Иван}
+                    is_read: false
+                    chat_id: "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                    created_at: '2017-07-21T17:34:28Z'
+                  - id: "ade570ff-0512-4dfb-96b4-fbe5ce3a2c13"
+                    body: Здравствуй!
+                    author: {"surname": Петров, "name": Пётр}
+                    is_read: true
+                    chat_id: "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                    created_at: '2017-07-21T17:32:28Z'
+                pagination:
+                  limit: 2
+                  offset: 0
+                  has_next: true
+        404:
+          description: Not found
+        500:
+          description: Server error
+    
+  /chat/message:
+    post:
+      summary: Написать сообщение
+      description: Написание сообщения
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BaseMessageSchema"
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MessageResponseSchema"
+              example:
+                id: "ade570ff-0512-4dfb-96b4-fbe5ce3a2c13"
+                body: Привет!
+                author: {"surname": Иванов, "name": Иван}
+                is_read: false
+                created_at: '2017-07-21T17:32:28Z'
+        400:
+          description: Bad request
+        500:
+          description: Server error
+          
+  /chat/message/read:
+    post:
+      summary: Прочитать сообщение
+      description: Прочитать сообщение
+      tags:
+        - Chat
+      parameters:
+        - name: message_id
+          in: query
+          description: id сообщения
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MessageResponseSchema"
+              example:
+                id: "ade570ff-0512-4dfb-96b4-fbe5ce3a2c13"
+                body: Привет!
+                author: {"surname": Иванов, "name": Иван}
+                is_read: true
+                created_at: '2017-07-21T17:32:28Z'
+        404:
+          description: Message not found
+        500:
+          description: Server error
+  
+
+components:
+  schemas:
+    UserShortSchema:
+      type: object
+      required:
+        - surname
+        - name
+      properties:
+        surname:
+          type: string
+          description: Фамилия
+          example: Иванов
+          nullable: false
+        name:
+          type: string
+          description: Имя
+          example: Иван
+          nullable: false
+      example:
+        surname: Иванов
+        name: Иван
+      
+    PhotoResponse:
+      type: object
+      required:
+        - id
+        - name
+        - url
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: id фотографии
+          nullable: false
+        name:
+          type: string
+          description: Название файла
+          example: "photo.jpeg"
+          nullable: false
+        url:
+          type: string
+          description: url до s3 с фотографией
+          example: "https://travelers_social_network.ru/photo.jpeg"
+          nullable: false
+      example:
+        id: "a8098c1a-f86e-11da-bd1a-00112444be1e"
+        name: "photo.jpeg"
+        url: "https://travelers_social_network.ru/photo.jpeg"
+        
+    BasePostSchema:
+      type: object
+      required:
+        - name
+        - description
+        - coords
+      properties:
+        name:
+          type: string
+          description: Название
+          example: "Поездка в Москву"
+          nullable: false
+        description:
+          type: string
+          description: "Описание"
+          example: На прошлой неделе я посетил столицу нашей Родины - город Москву
+          nullable: false
+        coords:
+          type: array
+          items:
+            type: number
+            format: double
+          description: Координаты
+          example: [55.755864, 37.617698]
+        photos:
+          type: array
+          items:
+            type: string
+            format: uuid  
+          description: Массив фото
+          nullable: true
+          example: ["a8098c1a-f86e-11da-bd1a-00112444be1e"]
+      example:
+        name: Поездка в Москву
+        description: На прошлой неделе я посетил столицу нашей Родины - город Москву
+        coords: [55.755864, 37.617698]
+        photos: ["a8098c1a-f86e-11da-bd1a-00112444be1e"]
+    
+    PostResponseSchema:
+      required:
+        - id
+      allOf:
+        - properties:
+            id:
+              type: string
+              format: uuid
+              description: id поста
+              nullable: false
+            author:
+              type: object
+              description: Автор поста
+              allOf:
+                - $ref: '#/components/schemas/UserShortSchema'
+        - $ref: '#/components/schemas/BasePostSchema'
+      example:
+        id: "a8098c1a-f86e-11da-bd1a-00112444be1e"
+        author: {"surname": Иванов, "name": Иван}
+        name: Поездка в Москву
+        description: На прошлой неделе я посетил столицу нашей Родины - город Москву
+        coords: [55.755864, 37.617698]
+        photos: ["a8098c1a-f86e-11da-bd1a-00112444be1e"]
+    
+    BaseMessageSchema:
+      type: object
+      required:
+        - body
+        - chat_id
+      properties:
+        body:
+          type: string 
+          description: Текст сообщения 
+          example: Привет!
+          nullable: false
+        chat_id:
+          type: string
+          format: uuid
+          description: id чата
+          nullable: false
+      example:
+        body: Привет!
+        chat_id: "a8098c1a-f86e-11da-bd1a-00112444be1e"
+    
+    MessageResponseSchema:
+      required:
+        - id
+      allOf:
+        - properties:
+            id:
+              type: string
+              format: uuid
+              description: id сообщения
+              nullable: false
+            author:
+              type: object
+              description: Автор сообщения
+              allOf:
+                - $ref: '#/components/schemas/UserShortSchema'
+            is_read:
+              type: boolean
+              description: Прочитано ли сообщение
+              default: true
+            created_at:
+              type: string
+              description: Время написания сообщения
+              format: datetime
+              example: '2017-07-21T17:32:28Z'
+        - $ref: '#/components/schemas/BaseMessageSchema'
+      example:
+        allOf:
+          - id: "a8098c1a-f86e-11da-bd1a-00112444be1e"
+          - author: {"surname": Иванов, "name": Иван}
+          - is_read: true
+          - created_at: '2017-07-21T17:32:28Z'
+          - $ref: '#/components/schemas/BaseMessageSchema/example'

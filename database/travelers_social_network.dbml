@@ -1,0 +1,75 @@
+// Пользователи
+Table user {
+  id uuid [primary key]
+  surname varchar
+  name varchar
+  email varchar
+  password varchar
+  photo_url varchar
+}
+
+
+// Реакции
+Table like {
+  id integer [primary key]
+  post_id uuid [ref: > post.id]
+  user_id uuid [ref: > user.id]
+}
+
+
+Table comment {
+  id integer [primary key]
+  body varchar
+  post_id uuid [ref: > post.id]
+  user_id uuid [ref: > user.id]
+}
+
+
+Table subscribtion {
+  id integer [primary key]
+  user_id uuid [ref: > user.id]
+  subscriber_id uuid [ref: > user.id]
+}
+
+
+// Посты
+Table post {
+  id uuid [primary key]
+  name varchar
+  description varchar
+  author_id uuid [ref: > user.id]
+  longitude  float
+  latitude   float
+  photos array(uuid)
+}
+
+
+Table photo {
+  id integer [primary key]
+  name varchar
+  url varchar
+}
+
+
+// Сообщения
+Table chat {
+  id uuid [primary key]
+  name varchar
+}
+
+
+Table user_chat {
+  id integer [primary key]
+  user_id uuid [ref: > user.id]
+  chat_id uuid [ref: > chat.id]
+}
+
+
+Table message {
+  id integer [primary key]
+  body varchar
+  is_read bool
+  author_id uuid [ref: > user.id]
+  chat_id uuid [ref: > chat.id]
+  created_at datetime
+}
